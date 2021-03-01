@@ -49,6 +49,7 @@ def check_settings(host, command):
     shell = client.invoke_shell()
     shell.send('queue type edit pcq-download-default pcq-rate \x01\0B 5m \x01\0f')
     #shell.send('\x01\0B 5m \x01\0f')
+    #shell.send('\x01\0B 5m \x01\0f')
 
 
 
