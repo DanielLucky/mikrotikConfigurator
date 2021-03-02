@@ -27,9 +27,9 @@ def import_file():
                     if all_info_mt_ip == '.':
                         all_info_mt_ip_clear = all_info_mt_ip_clear + all_info_mt_ip
                     elif all_info_mt_ip == ':':
-                        break
-
-            listMT[note] = {note: all_info_mt_ip_clear}  # Заполнение словаря
+                        all_info_mt_ip_clear = 0 # Исключение PoE MT
+            if all_info_mt_ip_clear != 0:
+                listMT[note] = {note: all_info_mt_ip_clear}  # Заполнение словаря
 
             all_info_mt_ip_clear = ''
     return listMT
@@ -84,22 +84,29 @@ def sort_import_file(import_dict, key):
     return sort_dict
 
 
-
-print(import_file(), '\n ---------------')  # Импорт и парсинг файла
-import_f = import_file()
+print('Импортирование файла Addresses.CDB')
+import_f = import_file() # Импорт и парсинг файла
 pprint.pprint(import_f)
+print(f'Выбрано: {len(import_f)} MT\n '
+      f'Выберите действие\n'
+      f'Сортировка - "1" ::: Доступность хостов - "2" ')
+select = input()
+if select == '1':
+    pass
+
+
 
 #print(sort_import_file(import_f, '*'))  # сортировка по ключу
-print('Sort key:')
-sort_import_f = sort_import_file(import_f, input())
-pprint.pprint(sort_import_f)
-
-# print(host_availability(sort_import_f), '\n ---------------')  # доступность хоста
-host_av = host_availability(sort_import_f)
-print('Доступные хосты:')
-pprint.pprint(host_av)
-print('Недоступные хосты:')
-pprint.pprint(sort_import_f.keys() - host_av.keys())
+# print('Sort key:')
+# sort_import_f = sort_import_file(import_f, input())
+# pprint.pprint(sort_import_f)
+#
+# # print(host_availability(sort_import_f), '\n ---------------')  # доступность хоста
+# host_av = host_availability(sort_import_f)
+# print('Доступные хосты:')
+# pprint.pprint(host_av)
+# print('Недоступные хосты:')
+# pprint.pprint(sort_import_f.keys() - host_av.keys())
 
 #print(check_settings(host_av, 'put [queue type get [find name=pcq-download-default] pcq-limit]'))
 #check_set = check_settings(host_av, 'put [queue type get [find name=pcq-download-default] pcq-limit]')
