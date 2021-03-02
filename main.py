@@ -1,10 +1,15 @@
+import os
+import pprint
 import paramiko
+import subprocess
 from socket import gethostbyname
 
 
+DEVNULL = subprocess.DEVNULL
+
 def import_file():
     listMT = {}
-    with open('Addresses.cdb', 'r', encoding="cp866") as fileAddress:
+    with open('Addresses.CDB', 'r', encoding="cp866") as fileAddress:
         # print(fileAddress.read())
         all_info_mt_ip_clear = ''
         file = fileAddress.read().split('M2')
@@ -31,42 +36,72 @@ def import_file():
 
 
 def host_availability(dict_filter):
-    pass
+    availability_dict = {}
+    for data in dict_filter:
+        #print(data)
+        for data_ip in dict_filter[data].values():
+            #print(data_ip)
+            requesrt = subprocess.call(["ping", "-c", "1", data_ip], stdout=DEVNULL)
+            if requesrt == 0:
+                availability_dict[data] = {data: data_ip}
+            #print(availability_dict)
+    return availability_dict
 
 
-def check_settings(host, command):
+def check_settings(host_dict, command):
     port = 22
-    user = 'admin'
-    password = ''
+    user = 'support'
+    password = 'Zaq12wsx'
+    data_out_dict = {}
+    for data in host_dict:
+        for data_ip in host_dict[data].values():
+            client = paramiko.SSHClient()
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            client.connect(hostname=data_ip, username=user, password=password, port=port)
+            stdin, stdout, stderr = client.exec_command(command)
+            data_out = stdout.read() + stderr.read()
+            client.close()
 
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(hostname=host, username=user, password=password, port=port)
-    stdin, stdout, stderr = client.exec_command(command)
-    data = stdout.read() + stderr.read()
-    client.close()
-
-    return data
+            data_out_dict[data] = {data: host_dict[data], 'answer': data_out.decode('utf-8')[:-2]}
+    return data_out_dict
 
 
 def sort_import_file(import_dict, key):
-    if key != '*':
-        for date_key in import_dict:
-            if date_key == key:
-                dict_fit = {date_key: import_dict[date_key]}
-            else:
-                dict_no_fit = {date_key: import_dict[date_key]}  # словарь не подходящих по фильтру
-        return dict_fit
-    else:
+    sort_dict = {}
+    if key == '*':
         return import_dict
 
+    key = key.split('*')
+
+    if key[-1] == '': # поиск при 'xxx*'
+        for data in import_dict:
+            if data[:len(key[0])] == key[0]:
+                sort_dict[data] = import_dict[data]
+    else:
+        for data in import_dict: # поиск при точном значении
+            if data == key[0]:
+                sort_dict[data] = import_dict[data]
+    return sort_dict
 
 
 
 print(import_file(), '\n ---------------')  # Импорт и парсинг файла
 import_f = import_file()
+pprint.pprint(import_f)
 
-print(sort_import_file(import_f, '*'), '\n ---------------')  # сортировка по ключу
-sort_import_f = sort_import_file(import_f, '*')
+#print(sort_import_file(import_f, '*'))  # сортировка по ключу
+print('Sort key:')
+sort_import_f = sort_import_file(import_f, input())
+pprint.pprint(sort_import_f)
 
-print(host_availability(sort_import_f))  # доступность хоста
+# print(host_availability(sort_import_f), '\n ---------------')  # доступность хоста
+host_av = host_availability(sort_import_f)
+print('Доступные хосты:')
+pprint.pprint(host_av)
+print('Недоступные хосты:')
+pprint.pprint(sort_import_f.keys() - host_av.keys())
+
+#print(check_settings(host_av, 'put [queue type get [find name=pcq-download-default] pcq-limit]'))
+#check_set = check_settings(host_av, 'put [queue type get [find name=pcq-download-default] pcq-limit]')
+
+# pprint.pprint(check_set, width=1)
