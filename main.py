@@ -82,11 +82,11 @@ def host_availability(dict_filter):
     availability_dict = {}
     for data in dict_filter:
         # print(data)
-        for data_ip in dict_filter[data].values():
+        for data_ip in dict_filter[data]:
             # print(data_ip)
-            requesrt = subprocess.call(["ping", "-c", "1", data_ip], stdout=DEVNULL)
+            requesrt = subprocess.call(["ping", "-c", "1", dict_filter[data]['ip']], stdout=DEVNULL)
             if requesrt == 0:
-                availability_dict[data] = {'ip': data_ip}
+                availability_dict[data] = {'ip': dict_filter[data]['ip']}
             # print(availability_dict)
     return availability_dict
 
@@ -95,17 +95,17 @@ def check_settings(host_dict, command):
     port = 22
     user = 'support'
     password = 'Zaq12wsx'
-    data_out_dict = {}
+    data_out = ''
     host_dict = host_availability(host_dict) # Проверка на доступность
 
     for data in host_dict:
 
         for data_ip in host_dict[data]:
 
-            print(data_ip)
+            #print(data_ip)
             client = paramiko.SSHClient()
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            print('mt', data, host_dict[data]['ip'], 'chenge')
+            #print('mt', data, host_dict[data]['ip'], 'chenge')
             try:
                 client.connect(hostname=host_dict[data]['ip'], username=user, password=password, port=port, banner_timeout=200, look_for_keys=False)
             except:
@@ -115,9 +115,14 @@ def check_settings(host_dict, command):
             client.close()
 
 
-            data_out_dict[data] = {'ip': host_dict[data]['ip'], command: data_out.decode('utf-8')}
+            #data_out_dict[data] = {'ip': host_dict[data]['ip'], command: data_out.decode('utf-8')}
+            data_out = data_out.decode('utf-8')
 
-    return data_out_dict
+        host_dict[data][command] = data_out
+        print('Заполнение:', host_dict[data][command], data_out)
+        #command = ''
+
+    return host_dict
 
 
 def sort_import_file(import_dict, key):
